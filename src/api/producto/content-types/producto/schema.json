@@ -1,0 +1,113 @@
+{
+  "kind": "collectionType",
+  "collectionName": "productos",
+  "info": {
+    "singularName": "producto",
+    "pluralName": "productos",
+    "displayName": "Producto",
+    "description": "Productos del catálogo con personalización textil"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255,
+      "minLength": 1
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "descripcion": {
+      "type": "richtext",
+      "required": true
+    },
+    "categoria": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::categoria-producto.categoria-producto",
+      "inversedBy": "productos"
+    },
+    "imagenPrincipal": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "galeria": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "precio": {
+      "type": "decimal",
+      "required": false,
+      "min": 0
+    },
+    "precioDescuento": {
+      "type": "decimal",
+      "required": false,
+      "min": 0
+    },
+    "stock": {
+      "type": "integer",
+      "required": false,
+      "min": 0,
+      "default": 0
+    },
+    "sku": {
+      "type": "string",
+      "required": false,
+      "unique": true
+    },
+    "peso": {
+      "type": "decimal",
+      "required": false,
+      "min": 0
+    },
+    "dimensiones": {
+      "type": "json",
+      "required": false
+    },
+    "colores": {
+      "type": "json",
+      "required": false
+    },
+    "tallas": {
+      "type": "json",
+      "required": false
+    },
+    "tecnicasPersonalizacion": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tecnica-personalizacion.tecnica-personalizacion",
+      "mappedBy": "productos"
+    },
+    "destacado": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "nuevo": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "enOferta": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+} 

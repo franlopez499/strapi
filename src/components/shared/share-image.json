@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_shared_share_images",
+  "info": {
+    "displayName": "Share Image",
+    "description": "Imagen para compartir en redes sociales (Open Graph)"
+  },
+  "options": {},
+  "attributes": {
+    "media": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "alt": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    }
+  }
+} 

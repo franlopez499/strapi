@@ -1,0 +1,92 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tecnica_personalizaciones",
+  "info": {
+    "singularName": "tecnica-personalizacion",
+    "pluralName": "tecnica-personalizaciones",
+    "displayName": "Técnica Personalización",
+    "description": "Técnicas disponibles para personalizar productos (serigrafía, vinilo, bordado, etc.)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 100
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "descripcion": {
+      "type": "richtext",
+      "required": true
+    },
+    "ventajas": {
+      "type": "json",
+      "required": false
+    },
+    "desventajas": {
+      "type": "json",
+      "required": false
+    },
+    "precioBase": {
+      "type": "decimal",
+      "required": false,
+      "min": 0
+    },
+    "tiempoProduccion": {
+      "type": "string",
+      "required": false
+    },
+    "cantidadMinima": {
+      "type": "integer",
+      "required": false,
+      "min": 1,
+      "default": 1
+    },
+    "cantidadOptima": {
+      "type": "integer",
+      "required": false,
+      "min": 1
+    },
+    "imagen": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "galeria": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "activa": {
+      "type": "boolean",
+      "default": true,
+      "required": false
+    },
+    "orden": {
+      "type": "integer",
+      "required": false,
+      "default": 0
+    },
+    "productos": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::producto.producto",
+      "inversedBy": "tecnicasPersonalizacion"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+} 

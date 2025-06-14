@@ -1,0 +1,40 @@
+{
+  "collectionName": "components_shared_seos",
+  "info": {
+    "displayName": "SEO",
+    "description": "Componente SEO reutilizable para optimización en buscadores"
+  },
+  "options": {},
+  "attributes": {
+    "metaTitle": {
+      "type": "string",
+      "required": true,
+      "maxLength": 60,
+      "minLength": 1
+    },
+    "metaDescription": {
+      "type": "text",
+      "required": true,
+      "maxLength": 160,
+      "minLength": 1
+    },
+    "keywords": {
+      "type": "string",
+      "required": false
+    },
+    "shareImage": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.share-image"
+    },
+    "noIndex": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "canonicalUrl": {
+      "type": "string",
+      "required": false
+    }
+  }
+} 

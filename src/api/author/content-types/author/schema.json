@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "authors",
+  "info": {
+    "singularName": "author",
+    "pluralName": "authors",
+    "displayName": "Author",
+    "description": "Autores de los artículos del blog"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": false
+    },
+    "bio": {
+      "type": "text",
+      "required": false,
+      "maxLength": 500
+    },
+    "title": {
+      "type": "string",
+      "required": false,
+      "maxLength": 100,
+      "default": "Experto en Personalización"
+    },
+    "avatar": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "socialLinks": {
+      "type": "json",
+      "required": false
+    },
+    "blog_posts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::blog-post.blog-post",
+      "mappedBy": "author"
+    }
+  }
+} 

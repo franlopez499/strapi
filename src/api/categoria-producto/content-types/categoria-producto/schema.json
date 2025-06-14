@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "categoria_productos",
+  "info": {
+    "singularName": "categoria-producto",
+    "pluralName": "categoria-productos",
+    "displayName": "Categoría Producto",
+    "description": "Categorías para organizar los productos del catálogo"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 100
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombre",
+      "required": true
+    },
+    "descripcion": {
+      "type": "text",
+      "required": false,
+      "maxLength": 500
+    },
+    "imagen": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "icono": {
+      "type": "string",
+      "required": false
+    },
+    "color": {
+      "type": "string",
+      "required": false,
+      "default": "#3B82F6"
+    },
+    "orden": {
+      "type": "integer",
+      "required": false,
+      "default": 0
+    },
+    "activa": {
+      "type": "boolean",
+      "default": true,
+      "required": false
+    },
+    "productos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::producto.producto",
+      "mappedBy": "categoria"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+} 
