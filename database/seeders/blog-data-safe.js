@@ -59,49 +59,77 @@ module.exports = {
         { slug: 'tendencias' }
       );
 
+      const casosEstudioCategory = await findOrCreate(
+        'api::blog-category.blog-category',
+        {
+          name: 'Casos de Estudio',
+          slug: 'casos-estudio',
+          description: 'Casos reales de éxito en personalización textil',
+          color: 'bg-orange-100 text-orange-800'
+        },
+        { slug: 'casos-estudio' }
+      );
+
+      const noticiasCategory = await findOrCreate(
+        'api::blog-category.blog-category',
+        {
+          name: 'Noticias',
+          slug: 'noticias',
+          description: 'Últimas noticias del sector textil y personalización',
+          color: 'bg-red-100 text-red-800'
+        },
+        { slug: 'noticias' }
+      );
+
       // 2. Crear autor
       const author = await findOrCreate(
         'api::author.author',
         {
-          name: 'Carlos Martínez',
-          slug: 'carlos-martinez',
-          email: 'carlos@inpublic.com',
+          name: 'Fernando Vazquez',
+          slug: 'fernando-vazquez',
+          email: 'fernando@inpublic.com',
           bio: 'Experto en personalización textil con más de 10 años de experiencia en serigrafía, bordado y técnicas de impresión.',
           title: 'Experto en Personalización'
         },
-        { slug: 'carlos-martinez' }
+        { slug: 'fernando-vazquez' }
       );
 
       // 3. Crear tags
-      const tag1 = await findOrCreate(
-        'api::tag.tag',
-        { name: 'serigrafía', slug: 'serigrafia' },
-        { slug: 'serigrafia' }
-      );
+      const tagNames = [
+        "camisetas personalizadas",
+        "serigrafía",
+        "vinilo textil",
+        "bordado",
+        "eventos deportivos",
+        "merchandising",
+        "diseño",
+        "colores",
+        "técnicas",
+        "calidad",
+        "precios",
+        "tendencias 2024",
+        "sublimación"
+      ];
 
-      const tag2 = await findOrCreate(
-        'api::tag.tag',
-        { name: 'vinilo textil', slug: 'vinilo-textil' },
-        { slug: 'vinilo-textil' }
-      );
+      const tags = [];
+      for (const tagName of tagNames) {
+        const slug = tagName.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[áàäâ]/g, 'a')
+          .replace(/[éèëê]/g, 'e')
+          .replace(/[íìïî]/g, 'i')
+          .replace(/[óòöô]/g, 'o')
+          .replace(/[úùüû]/g, 'u')
+          .replace(/[ñ]/g, 'n')
+          .replace(/[^a-z0-9-]/g, '');
 
-      const tag3 = await findOrCreate(
-        'api::tag.tag',
-        { name: 'bordado', slug: 'bordado' },
-        { slug: 'bordado' }
-      );
-
-      const tag4 = await findOrCreate(
-        'api::tag.tag',
-        { name: 'sublimación', slug: 'sublimacion' },
-        { slug: 'sublimacion' }
-      );
-
-      const tag5 = await findOrCreate(
-        'api::tag.tag',
-        { name: 'técnicas', slug: 'tecnicas' },
-        { slug: 'tecnicas' }
-      );
+        const tag = await findOrCreate(
+          'api::tag.tag',
+          { name: tagName, slug: slug },
+          { slug: slug }
+        );
+        tags.push(tag);
+      }
 
       // 4. Crear el blog post principal
       const mainBlogPost = await findOrCreate(
@@ -162,7 +190,7 @@ module.exports = {
           `,
           category: tutorialesCategory.id,
           author: author.id,
-          tags: [tag1.id, tag2.id, tag3.id, tag4.id, tag5.id],
+          tags: tags.slice(0, 5).map(tag => tag.id), // Usar los primeros 5 tags
           readTime: 8,
           views: 2340,
           likes: 89,
@@ -222,6 +250,215 @@ module.exports = {
         },
         { slug: 'tendencias-colores-equipos-deportivos-2024' }
       );
+
+      // 6. Crear categorías de productos
+      const categoriaProductos = [
+        { id: "camisetas", label: "Camisetas", count: 45 },
+        { id: "sudaderas", label: "Sudaderas", count: 23 },
+        { id: "polos", label: "Polos", count: 18 },
+        { id: "merchandising", label: "Merchandising", count: 32 },
+        { id: "vinilos", label: "Vinilos", count: 15 },
+        { id: "banners", label: "Banners", count: 12 },
+        { id: "chaquetas", label: "Chaquetas", count: 8 }
+      ];
+
+      const productCategories = [];
+      for (const cat of categoriaProductos) {
+        const productCategory = await findOrCreate(
+          'api::categoria-producto.categoria-producto',
+          {
+            nombre: cat.label,
+            slug: cat.id,
+            descripcion: `Productos de ${cat.label.toLowerCase()} para personalización`,
+            activa: true,
+            orden: categoriaProductos.indexOf(cat)
+          },
+          { slug: cat.id }
+        );
+        productCategories.push(productCategory);
+      }
+
+      // 7. Crear técnicas de personalización
+      const tecnicasData = [
+        {
+          nombre: 'Serigrafía',
+          slug: 'serigrafia',
+          descripcion: '<p>La serigrafía es una técnica de impresión que utiliza una pantalla de malla para transferir tinta sobre una superficie.</p>',
+          ventajas: ['Durabilidad excelente', 'Colores vibrantes', 'Económico para grandes cantidades', 'Acabado profesional'],
+          desventajas: ['Costo inicial alto', 'No rentable para pocas unidades', 'Limitado en detalles finos'],
+          cantidadMinima: 50,
+          cantidadOptima: 200,
+          tiempoProduccion: '5-7 días laborables'
+        },
+        {
+          nombre: 'Vinilo Textil',
+          slug: 'vinilo-textil',
+          descripcion: '<p>El vinilo textil es una lámina adhesiva que se corta con precisión y se aplica mediante calor.</p>',
+          ventajas: ['Perfecto para pocas unidades', 'Entrega rápida', 'Sin costos de preparación', 'Variedad de colores'],
+          desventajas: ['Menos duradero que serigrafía', 'Limitado a diseños simples', 'Costo por unidad más alto'],
+          cantidadMinima: 1,
+          cantidadOptima: 50,
+          tiempoProduccion: '24-48 horas'
+        },
+        {
+          nombre: 'Bordado',
+          slug: 'bordado',
+          descripcion: '<p>El bordado es una técnica que utiliza hilos para crear diseños directamente en la tela.</p>',
+          ventajas: ['Aspecto premium', 'Muy duradero', 'Ideal para logos', 'Percepción de calidad'],
+          desventajas: ['Costo más alto', 'Limitado en diseños complejos', 'Tiempo de producción largo'],
+          cantidadMinima: 12,
+          cantidadOptima: 100,
+          tiempoProduccion: '7-10 días laborables'
+        },
+        {
+          nombre: 'Sublimación',
+          slug: 'sublimacion',
+          descripcion: '<p>La sublimación permite imprimir diseños a todo color con fotografías y degradados.</p>',
+          ventajas: ['Colores ilimitados', 'Fotografías en alta resolución', 'Muy duradero', 'Tacto suave'],
+          desventajas: ['Solo en tejidos sintéticos', 'Colores claros únicamente', 'Equipamiento especializado'],
+          cantidadMinima: 1,
+          cantidadOptima: 100,
+          tiempoProduccion: '3-5 días laborables'
+        }
+      ];
+
+      const tecnicas = [];
+      for (const tecnicaData of tecnicasData) {
+        const tecnica = await findOrCreate(
+          'api::tecnica-personalizacion.tecnica-personalizacion',
+          {
+            ...tecnicaData,
+            activa: true,
+            orden: tecnicasData.indexOf(tecnicaData)
+          },
+          { slug: tecnicaData.slug }
+        );
+        tecnicas.push(tecnica);
+      }
+
+      // 8. Crear productos
+      const productosData = [
+        {
+          nombre: "Camiseta Deportiva Premium",
+          slug: "camiseta-deportiva-premium",
+          categoria: "camisetas",
+          precio: 12.50,
+          descripcion: "<p>Camiseta 100% algodón, ideal para equipos deportivos. Disponible en múltiples colores.</p>",
+          destacado: true,
+          nuevo: false,
+          stock: 250
+        },
+        {
+          nombre: "Sudadera con Capucha Unisex",
+          slug: "sudadera-capucha-unisex",
+          categoria: "sudaderas",
+          precio: 28.90,
+          descripcion: "<p>Sudadera premium con capucha, perfecta para personalización con vinilo o bordado.</p>",
+          destacado: false,
+          nuevo: true,
+          stock: 180
+        },
+        {
+          nombre: "Polo Empresarial Elegante",
+          slug: "polo-empresarial-elegante",
+          categoria: "polos",
+          precio: 18.75,
+          precioDescuento: 15.99,
+          descripcion: "<p>Polo de alta calidad para uniformes corporativos. Tejido transpirable.</p>",
+          destacado: false,
+          nuevo: false,
+          enOferta: true,
+          stock: 120
+        },
+        {
+          nombre: "Vinilo Textil Reflectante",
+          slug: "vinilo-textil-reflectante",
+          categoria: "vinilos",
+          precio: 8.50,
+          descripcion: "<p>Vinilo reflectante de alta visibilidad, perfecto para ropa deportiva nocturna.</p>",
+          destacado: false,
+          nuevo: false,
+          stock: 50
+        },
+        {
+          nombre: "Gorra Snapback Personalizable",
+          slug: "gorra-snapback-personalizable",
+          categoria: "merchandising",
+          precio: 15.20,
+          descripcion: "<p>Gorra snapback de calidad premium, ideal para bordado y personalización.</p>",
+          destacado: false,
+          nuevo: false,
+          stock: 95
+        },
+        {
+          nombre: "Banner Publicitario Exterior",
+          slug: "banner-publicitario-exterior",
+          categoria: "banners",
+          precio: 45.00,
+          descripcion: "<p>Banner impermeable para exteriores, con ojales reforzados y colores duraderos.</p>",
+          destacado: false,
+          nuevo: false,
+          stock: 30
+        },
+        {
+          nombre: "Camiseta Técnica Running",
+          slug: "camiseta-tecnica-running",
+          categoria: "camisetas",
+          precio: 16.90,
+          descripcion: "<p>Camiseta técnica con tejido transpirable, perfecta para eventos deportivos.</p>",
+          destacado: true,
+          nuevo: false,
+          stock: 200
+        },
+        {
+          nombre: "Taza Cerámica Personalizable",
+          slug: "taza-ceramica-personalizable",
+          categoria: "merchandising",
+          precio: 9.95,
+          descripcion: "<p>Taza de cerámica blanca, ideal para sublimación y regalos corporativos.</p>",
+          destacado: false,
+          nuevo: false,
+          stock: 150
+        },
+        {
+          nombre: "Chaqueta Softshell Impermeable",
+          slug: "chaqueta-softshell-impermeable",
+          categoria: "chaquetas",
+          precio: 42.50,
+          descripcion: "<p>Chaqueta softshell impermeable y transpirable, perfecta para equipos outdoor.</p>",
+          destacado: true,
+          nuevo: false,
+          stock: 75
+        }
+      ];
+
+      for (const productoData of productosData) {
+        // Encontrar la categoría correspondiente
+        const categoria = productCategories.find(cat => cat.slug === productoData.categoria);
+        
+        await findOrCreate(
+          'api::producto.producto',
+          {
+            nombre: productoData.nombre,
+            slug: productoData.slug,
+            descripcion: productoData.descripcion,
+            precio: productoData.precio,
+            precioDescuento: productoData.precioDescuento || null,
+            categoria: categoria ? categoria.id : null,
+            destacado: productoData.destacado || false,
+            nuevo: productoData.nuevo || false,
+            enOferta: productoData.enOferta || false,
+            stock: productoData.stock || 0,
+            tecnicasPersonalizacion: tecnicas.slice(0, 3).map(t => t.id), // Asignar las primeras 3 técnicas
+            seo: {
+              metaTitle: `${productoData.nombre} | InPublic`,
+              metaDescription: productoData.descripcion.replace(/<[^>]*>/g, '').substring(0, 150),
+              keywords: `${productoData.nombre.toLowerCase()}, personalización, ${productoData.categoria}`
+            }
+          },
+          { slug: productoData.slug }
+        );
+      }
 
       console.log('✅ Seed seguro completado exitosamente');
       
