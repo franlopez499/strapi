@@ -1,37 +1,148 @@
-# Strapi example
+# Strapi CMS - Coolify Deployment Guide
 
-This example deploys self-hosted version of [Strapi](https://strapi.io/). Internally it uses a PostgreSQL database to store the data.
+This guide will walk you through deploying a Strapi CMS application to Coolify with PostgreSQL database.
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/strapi?referralCode=milo)
+## Prerequisites
 
-## ✨ Features
+- A Coolify instance running and accessible
+- Git repository access
+- PostgreSQL database access (Coolify managed or external)
 
-- Strapi
-- Postgres
+## Deployment Steps
 
-## 💁‍♀️ How to use
+### 1. Create PostgreSQL Database in Coolify
 
-- Click the Railway button 👆
-- Add the environment variables
-- Media will automatically be persisted between deploys!
+1. Go to your Coolify dashboard
+2. Click **Databases** → **+ New Database**
+3. Select **PostgreSQL**
+4. Configure:
+   - Name: `strapi-db` (or your preferred name)
+   - PostgreSQL Version: `15` or later
+   - Username: `strapi`
+   - Password: (auto-generated or custom)
+   - Database Name: `strapi`
+5. Click **Create**
+6. **Copy the connection URL** (you'll need this for environment variables)
 
-## 💻 Developing locally
+### 2. Create New Application
 
-When developing locally this Strapi template will connect to the Postgres server from its public [TCP Proxy](https://docs.railway.app/deploy/exposing-your-app#tcp-proxying)
+1. Go to **Applications** → **+ New Application**
+2. Select your Git repository
+3. Select the branch: `main` (or your deployment branch)
+4. Build Pack: **Nixpacks** (recommended for Node.js applications)
+5. Port: `1337`
 
-- Enable the feature flag `Template Service Eject` in the [Feature Flags](https://railway.app/account/feature-flags) menu
-- Within the service settings of the Strapi service click the `Eject` button on the upstream repository
-- Clone that newly created repository locally
-- Install Strapi's dependencies with `yarn install` or `npm install`
-- Install the Railway CLI
-    - Instructions for that can be found [here](https://docs.railway.app/develop/cli#installation)
-    - If this is your first time using the CLI make sure to login with `railway login`
-- Within the local repository run `railway link` to link the local repository to the Strapi service on Railway
-- Start Strapi for development with `railway run yarn run develop` or `railway run npm run develop`
-    - This command will run Strapi in development mode with the service variables available locally
-- Open your browser to `http://127.0.0.1:1337/admin`
+### 3. Configure Environment Variables
 
-## 📝 Notes
+Add these environment variables in Coolify:
 
-- After your app is deployed, visit the `/admin` endpoint to create your admin user.
-- If you want to use npm with this project make sure you delete the `yarn.lock` file after you have ran `npm install`
+**Required Variables:**
+```bash
+NODE_ENV=production
+DATABASE_URL=<your-postgres-connection-url-from-step-1>
+DATABASE_PUBLIC_URL=<postgres-public-url>
+HOST=::
+#PORT=1337
+APP_KEYS=<generate-random-key-1>,<generate-random-key-2>,<generate-random-key-3>,<generate-random-key-4>
+API_TOKEN_SALT=<generate-random-salt>
+ADMIN_JWT_SECRET=<generate-random-secret>
+TRANSFER_TOKEN_SALT=<generate-random-salt>
+JWT_SECRET=<generate-random-secret>
+```
+
+**Additional Recommended Variables:**
+```bash
+BROWSER=false
+STRAPI_DISABLE_UPDATE_NOTIFICATION=true
+STRAPI_TELEMETRY_DISABLED=true
+URL=https://your-domain.com  # Your public URL
+WEBHOOKS_POPULATE_RELATIONS=false
+```
+
+**Generate Random Secrets:**
+
+You can generate random secrets using this command on your local machine:
+```bash
+openssl rand -base64 32
+```
+
+Run it 4 times for APP_KEYS (comma-separated) and once each for the other secrets.
+
+> **Note:** Keep these secrets secure and never commit them to version control.
+
+### 4. Configure Persistent Storage (for uploads)
+
+1. In your application settings, go to **Storages**
+2. Add a new volume:
+   - **Name**: `uploads`
+   - **Mount Path**: `/app/public/uploads`
+   - **Host Path**: Leave empty (Coolify will manage it)
+3. Save
+
+### 5. Deploy
+
+1. Click **Deploy** button
+2. Wait for the build to complete (first build may take 3-5 minutes)
+3. Check logs if there are any errors
+
+### 6. Access Your Strapi Admin
+
+1. Once deployed, visit: `http://your-server-ip:1337/admin`
+2. Create your first admin user
+3. Start creating content!
+
+## Database Seeding
+
+To seed the database with initial content:
+
+1. Open the Strapi application terminal in Coolify
+2. Run the following commands:
+
+```bash
+PORT=1338 npx strapi console
+```
+
+3. In the Strapi console, execute:
+
+```javascript
+const seedDataSafe = require('./database/seeders/blog-data-safe.js');
+await seedDataSafe.seed(strapi);
+```
+
+4. Exit the console when done
+
+> **Note:** Database seeding should only be done once after initial deployment.
+
+## Next Steps
+
+- **Setup Domain**: Configure a domain name in Coolify for HTTPS
+- **Enable HTTPS**: Coolify can auto-provision SSL certificates via Let's Encrypt
+- **Configure Backups**: Set up database backups in Coolify
+- **Monitor Logs**: Use Coolify's log viewer to monitor your application
+- **Security**: Review and update API permissions in Strapi settings
+- **Performance**: Consider enabling caching and CDN for production use
+
+## Troubleshooting
+
+### Common Issues
+
+**Database Connection Errors:**
+- Verify the `DATABASE_URL` is correct
+- Ensure the database is accessible from your application
+- Check if the database credentials are valid
+
+**Build Failures:**
+- Check the build logs in Coolify
+- Verify all environment variables are set correctly
+- Ensure the correct branch is selected
+
+**Upload Issues:**
+- Verify persistent storage is configured correctly
+- Check file permissions on the uploads directory
+- Ensure sufficient disk space is available
+
+## Support
+
+For more information, refer to:
+- [Strapi Documentation](https://docs.strapi.io)
+- [Coolify Documentation](https://coolify.io/docs)
