@@ -4,24 +4,24 @@
  * Usage: npm run seed
  */
 
-const { default: Strapi } = require('@strapi/strapi');
+const strapi = require('@strapi/strapi');
 
 async function seed() {
   console.log('🌱 Starting database seeding...\n');
 
-  const strapi = await Strapi().load();
+  const app = await strapi().load();
 
   try {
     // Load and run the safe seeder
     const seedDataSafe = require('../database/seeders/blog-data-safe.js');
-    await seedDataSafe.seed(strapi);
+    await seedDataSafe.seed(app);
 
     console.log('\n✅ Database seeding completed successfully!');
   } catch (error) {
     console.error('\n❌ Error during seeding:', error);
     process.exit(1);
   } finally {
-    await strapi.destroy();
+    await app.destroy();
   }
 
   process.exit(0);
