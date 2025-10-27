@@ -14,8 +14,11 @@ module.exports = ({ env }) => ({
     nps: env.bool('FLAG_NPS', true),
     promoteEE: env.bool('FLAG_PROMOTE_EE', true),
   },
+  url: env('ADMIN_URL', '/admin'),
   cookie: {
     secure: true,
-    sameSite: 'none', // important for Cloudflare & HTTPS
+    sameSite: 'lax', // Changed from 'none' to 'lax' for same-domain admin
+    httpOnly: true,
+    domain: env('COOKIE_DOMAIN', undefined), // Let browser set domain automatically
   },
 });

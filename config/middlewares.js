@@ -12,8 +12,14 @@ module.exports = [
     config: {
       enabled: true,
       origin: (ctx) => {
-        // Accept requests from your real frontend or Cloudflare
-        return ['https://strapi.inpublic.es', 'https://*.inpublic.es'];
+        // Get the origin from the request
+        const origin = ctx.request.header.origin;
+        // Accept requests from inpublic.es domain or same domain
+        if (origin && (origin.endsWith('.inpublic.es') || origin === 'https://strapi.inpublic.es')) {
+          return origin;
+        }
+        // Default to the configured URL for same-origin requests
+        return 'https://strapi.inpublic.es';
       },
       headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
       credentials: true,
