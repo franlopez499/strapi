@@ -141,6 +141,33 @@ await seedDataSafe.seed(strapi);
 - Check file permissions on the uploads directory
 - Ensure sufficient disk space is available
 
+**Login Issues with Cloudflare Proxy (Invalid Credentials):**
+
+If you added a custom domain with Cloudflare proxy enabled (orange cloud) and suddenly cannot login:
+
+1. **Update Environment Variables in Coolify:**
+   ```bash
+   URL=https://your-domain.com
+   ADMIN_URL=https://your-domain.com/admin
+   ```
+
+2. **Configuration is already set:**
+   - `config/server.js` has `proxy: true` enabled (required for Cloudflare)
+   - `config/admin.js` has `url: env('ADMIN_URL', '/admin')` configured
+   - `config/middlewares.js` has proper security settings for proxy
+
+3. **Restart your application** in Coolify after adding these environment variables
+
+4. **Clear browser cache and cookies** for the domain
+
+5. **Cloudflare Settings Check:**
+   - SSL/TLS mode should be set to "Full" or "Full (strict)" in Cloudflare dashboard
+   - Ensure "Always Use HTTPS" is enabled
+   - Under "Network", verify HTTP/2 is enabled
+
+**Why this happens:**
+When you add a domain through Cloudflare proxy, Strapi needs to know the correct public URL for cookie settings and authentication. Without `URL` and `ADMIN_URL` environment variables, Strapi may use the internal container URL, causing authentication cookies to fail.
+
 ## Support
 
 For more information, refer to:
