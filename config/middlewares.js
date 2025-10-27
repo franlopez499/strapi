@@ -11,11 +11,9 @@ module.exports = [
     name: 'strapi::cors',
     config: {
       enabled: true,
-      origin: (ctx) => {
-        // Accept requests from your real frontend or Cloudflare
-        return ['https://strapi.inpublic.es', 'https://*.inpublic.es'];
-      },
+      origin: ['https://strapi.inpublic.es'],
       headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       credentials: true,
     },
   },
