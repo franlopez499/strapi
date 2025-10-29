@@ -226,8 +226,8 @@ module.exports = (config, { strapi }) => {
       if (ctx.request.body?.email) {
         strapi.log.info(`[${requestId}] 👤 USER LOOKUP:`);
         try {
-          const user = await strapi.admin.services.user.findOne({ 
-            email: ctx.request.body.email 
+          const user = await strapi.db.query('admin::user').findOne({
+            where: { email: ctx.request.body.email }
           });
           
           if (user) {
@@ -252,7 +252,9 @@ module.exports = (config, { strapi }) => {
             strapi.log.error(`[${requestId}] ❌ USER NOT FOUND in database for email: ${ctx.request.body.email}`);
             strapi.log.info(`[${requestId}] Attempting to list all admin users...`);
             try {
-              const allUsers = await strapi.admin.services.user.findAll();
+              const allUsers = await strapi.db.query('admin::user').findMany({
+                select: ['id', 'email', 'isActive', 'blocked']
+              });
               strapi.log.info(`[${requestId}] Found ${allUsers.length} admin user(s) in database:`);
               allUsers.forEach((u, idx) => {
                 strapi.log.info(`[${requestId}]   ${idx + 1}. ${u.email} (Active: ${u.isActive}, Blocked: ${u.blocked})`);

@@ -43,11 +43,11 @@ module.exports = [
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',
-  'strapi::session',
   {
     name: 'global::fix-protocol',
     config: {},
   },
+  'strapi::session',
   {
     name: 'global::fix-empty-auth-header',
     config: {},
