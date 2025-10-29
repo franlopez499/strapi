@@ -4,11 +4,13 @@ module.exports = ({ env }) => ({
   app: {
     keys: env.array('APP_KEYS'),
     proxy: true, // Trust proxy headers (important for HTTPS detection)
+
   },
   webhooks: {
     populateRelations: env.bool('WEBHOOKS_POPULATE_RELATIONS', false),
   },
   url: env('URL'),
-  proxy: true,
-  forceProxySecure: true
+  proxy: {
+    koa: true, // Trust proxy headers
+  },
 });
