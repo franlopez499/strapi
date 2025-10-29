@@ -38,6 +38,12 @@ The "Invalid credentials" error after adding Cloudflare DNS + proxy is typically
 - Enhanced CORS headers to include `X-Requested-With`
 - Added explicit security middleware configuration
 - Added `HEAD` method to CORS methods
+- Added middleware to strip empty Authorization headers from login requests
+
+### 3. Created `src/middlewares/fix-empty-auth-header.js`
+- Middleware that removes empty `Authorization: Bearer` headers from `/admin/login` requests
+- Prevents Strapi from attempting token authentication with empty tokens
+- This fixes the issue where browsers/Cloudflare send empty Authorization headers
 
 ## Step-by-Step Resolution
 
@@ -104,7 +110,25 @@ node node_modules/@strapi/strapi/bin/strapi.js admin:reset-user-password --email
    - Email Address Obfuscation
    - Rocket Loader
 
-### Step 4: Test Login
+### Step 4: Clear Browser Storage (CRITICAL)
+
+**The empty `Authorization: Bearer` header is likely from cached browser data!**
+
+1. **Open Browser Developer Tools** (F12)
+2. **Go to Application tab** (Chrome) or **Storage tab** (Firefox)
+3. **Clear ALL storage**:
+   - Local Storage → Clear All
+   - Session Storage → Clear All
+   - Cookies → Delete all cookies for `strapi.inpublic.es`
+   - IndexedDB → Delete all databases
+4. **OR use Incognito/Private mode** (easiest option)
+5. **Close and reopen browser** completely
+
+**Alternative: Clear via Browser Settings**
+- Chrome: Settings → Privacy → Clear browsing data → Advanced → Select "Cookies and other site data" + "Cached images and files"
+- Firefox: Settings → Privacy → Clear Data → Select all options
+
+### Step 5: Test Login
 
 #### Test 1: Direct curl (Bypass Browser Issues)
 
@@ -157,7 +181,7 @@ Then check `cookies.txt` for authentication cookies.
    - Response headers (especially `Set-Cookie`, `Access-Control-Allow-Origin`)
    - Response body for error details
 
-### Step 5: Verify Database User Status
+### Step 6: Verify Database User Status
 
 If login still fails, check user status in database:
 
@@ -181,7 +205,7 @@ SET blocked = false, is_active = true
 WHERE email = 'francisco.lopez.toledo@gmail.com';
 ```
 
-### Step 6: Check Strapi Logs
+### Step 7: Check Strapi Logs
 
 In Coolify, check application logs for detailed error messages:
 
@@ -191,7 +215,7 @@ Look for:
 - Cookie errors
 - Database connection errors
 
-### Step 7: Test Without Cloudflare Proxy (Isolation Test)
+### Step 8: Test Without Cloudflare Proxy (Isolation Test)
 
 To isolate if Cloudflare is the issue:
 
@@ -200,7 +224,7 @@ To isolate if Cloudflare is the issue:
 3. Test login again via direct IP or non-proxied DNS
 4. If login works without proxy, the issue is Cloudflare configuration
 
-### Step 8: Verify APP_KEYS Consistency
+### Step 9: Verify APP_KEYS Consistency
 
 If sessions are being rejected, check if `APP_KEYS` are consistent:
 

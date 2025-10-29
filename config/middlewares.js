@@ -42,6 +42,10 @@ module.exports = [
   'strapi::query',
   'strapi::body',
   'strapi::session',
+  {
+    name: 'global::fix-empty-auth-header',
+    config: {},
+  },
   'strapi::favicon',
   'strapi::public',
   {
