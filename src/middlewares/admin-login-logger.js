@@ -32,6 +32,23 @@ module.exports = (config, { strapi }) => {
       strapi.log.info(`[${requestId}]   Request Host: ${ctx.host}`);
       strapi.log.info(`[${requestId}]   Request Path: ${ctx.path}`);
       
+      // Check for protocol mismatch (HTTP vs HTTPS)
+      let forwardedProtoCheck = ctx.headers['x-forwarded-proto'];
+      if (!forwardedProtoCheck && ctx.headers['cf-visitor']) {
+        try {
+          const cfVisitor = JSON.parse(ctx.headers['cf-visitor']);
+          forwardedProtoCheck = cfVisitor.scheme;
+        } catch (err) {
+          // Ignore parsing errors
+        }
+      }
+      if (forwardedProtoCheck && forwardedProtoCheck === 'https' && ctx.protocol === 'http') {
+        strapi.log.error(`[${requestId}] ⚠️  PROTOCOL MISMATCH!`);
+        strapi.log.error(`[${requestId}]   Request Protocol: ${ctx.protocol} (should be ${forwardedProtoCheck})`);
+        strapi.log.error(`[${requestId}]   This can cause cookie/session issues!`);
+        strapi.log.error(`[${requestId}]   Fix: Ensure proxy: true and trust proxy settings are correct`);
+      }
+      
       // Check for URL mismatch
       if (serverConfig.url && ctx.host && !ctx.host.includes(new URL(serverConfig.url).hostname)) {
         strapi.log.warn(`[${requestId}] ⚠️  URL MISMATCH: Config URL host doesn't match request host!`);
@@ -87,7 +104,15 @@ module.exports = (config, { strapi }) => {
       // ========== PROXY HEADER ANALYSIS ==========
       strapi.log.info(`[${requestId}] 🔄 PROXY HEADER ANALYSIS:`);
       const forwardedFor = ctx.headers['x-forwarded-for'] || ctx.headers['x-real-ip'] || ctx.headers['cf-connecting-ip'];
-      const forwardedProto = ctx.headers['x-forwarded-proto'] || ctx.headers['cf-visitor'];
+      let forwardedProto = ctx.headers['x-forwarded-proto'];
+      if (!forwardedProto && ctx.headers['cf-visitor']) {
+        try {
+          const cfVisitor = JSON.parse(ctx.headers['cf-visitor']);
+          forwardedProto = cfVisitor.scheme;
+        } catch (err) {
+          // Ignore parsing errors
+        }
+      }
       const forwardedHost = ctx.headers['x-forwarded-host'];
       
       strapi.log.info(`[${requestId}]   Original IP: ${forwardedFor || ctx.request.ip || 'unknown'}`);
@@ -102,25 +127,49 @@ module.exports = (config, { strapi }) => {
       // ========== CORS & SECURITY HEADERS ==========
       strapi.log.info(`[${requestId}] 🔒 CORS & SECURITY:`);
       const origin = ctx.headers.origin;
-      const corsConfig = strapi.config.get('middleware.cors');
-      strapi.log.info(`[${requestId}]   Request Origin: ${origin || 'none'}`);
-      strapi.log.info(`[${requestId}]   CORS Enabled: ${corsConfig.enabled}`);
-      strapi.log.info(`[${requestId}]   CORS Origins: ${JSON.stringify(corsConfig.origin)}`);
-      strapi.log.info(`[${requestId}]   CORS Credentials: ${corsConfig.credentials}`);
       
-      if (origin && corsConfig.origin && !corsConfig.origin.includes(origin)) {
-        strapi.log.warn(`[${requestId}] ⚠️  CORS ORIGIN MISMATCH!`);
-        strapi.log.warn(`[${requestId}]   Request Origin: ${origin}`);
-        strapi.log.warn(`[${requestId}]   Allowed Origins: ${JSON.stringify(corsConfig.origin)}`);
+      // Try to get CORS config safely
+      let corsConfig = null;
+      try {
+        // Try different ways to access middleware config
+        corsConfig = strapi.config.get('middleware.cors') || 
+                     strapi.config.get('middlewares')?.find(m => m.name === 'strapi::cors')?.config ||
+                     null;
+      } catch (err) {
+        strapi.log.warn(`[${requestId}]   Could not access CORS config: ${err.message}`);
+      }
+      
+      strapi.log.info(`[${requestId}]   Request Origin: ${origin || 'none'}`);
+      
+      if (corsConfig) {
+        strapi.log.info(`[${requestId}]   CORS Enabled: ${corsConfig.enabled || 'unknown'}`);
+        strapi.log.info(`[${requestId}]   CORS Origins: ${JSON.stringify(corsConfig.origin || [])}`);
+        strapi.log.info(`[${requestId}]   CORS Credentials: ${corsConfig.credentials || 'unknown'}`);
+        
+        if (origin && corsConfig.origin && Array.isArray(corsConfig.origin) && !corsConfig.origin.includes(origin)) {
+          strapi.log.warn(`[${requestId}] ⚠️  CORS ORIGIN MISMATCH!`);
+          strapi.log.warn(`[${requestId}]   Request Origin: ${origin}`);
+          strapi.log.warn(`[${requestId}]   Allowed Origins: ${JSON.stringify(corsConfig.origin)}`);
+        }
+      } else {
+        strapi.log.warn(`[${requestId}]   CORS Config: Could not retrieve (may be using defaults)`);
+        // Check response headers for CORS info instead
+        if (ctx.response.get?.('access-control-allow-origin')) {
+          strapi.log.info(`[${requestId}]   CORS Allow Origin (from response): ${ctx.response.get('access-control-allow-origin')}`);
+        }
       }
       
       // ========== ADMIN CONFIGURATION ==========
       strapi.log.info(`[${requestId}] ⚙️  ADMIN CONFIGURATION:`);
       const adminConfig = strapi.config.get('admin');
-      strapi.log.info(`[${requestId}]   Admin JWT Secret Set: ${adminConfig.auth.secret ? 'YES' : 'NO'}`);
-      strapi.log.info(`[${requestId}]   Cookie Secure: ${adminConfig.cookie.secure}`);
-      strapi.log.info(`[${requestId}]   Cookie SameSite: ${adminConfig.cookie.sameSite}`);
-      strapi.log.info(`[${requestId}]   Cookie HttpOnly: ${adminConfig.cookie.httpOnly}`);
+      if (adminConfig) {
+        strapi.log.info(`[${requestId}]   Admin JWT Secret Set: ${adminConfig.auth?.secret ? 'YES' : 'NO'}`);
+        strapi.log.info(`[${requestId}]   Cookie Secure: ${adminConfig.cookie?.secure || 'unknown'}`);
+        strapi.log.info(`[${requestId}]   Cookie SameSite: ${adminConfig.cookie?.sameSite || 'unknown'}`);
+        strapi.log.info(`[${requestId}]   Cookie HttpOnly: ${adminConfig.cookie?.httpOnly || 'unknown'}`);
+      } else {
+        strapi.log.warn(`[${requestId}]   Admin Config: Could not retrieve`);
+      }
       
       // ========== SESSION & COOKIE ANALYSIS ==========
       strapi.log.info(`[${requestId}] 🍪 SESSION & COOKIE ANALYSIS:`);
