@@ -2,7 +2,7 @@
 
 /**
  * Comprehensive logging middleware for admin login debugging
- * Logs all request details, authentication attempts, and responses
+ * Logs all request details, authentication attempts, domain checks, and Strapi internals
  */
 module.exports = (config, { strapi }) => {
   return async (ctx, next) => {
@@ -16,37 +16,147 @@ module.exports = (config, { strapi }) => {
       strapi.log.info(`[${requestId}] 🔐 ADMIN LOGIN ATTEMPT - ${timestamp}`);
       strapi.log.info('='.repeat(80));
       
-      // Log request headers (excluding sensitive data)
-      strapi.log.info(`[${requestId}] Request Headers:`);
-      Object.keys(ctx.headers).forEach(key => {
-        const value = ctx.headers[key];
-        // Mask Authorization tokens
-        if (key.toLowerCase() === 'authorization' && value && value.length > 20) {
-          strapi.log.info(`[${requestId}]   ${key}: Bearer ${value.substring(0, 20)}...`);
+      // ========== DOMAIN & URL CONFIGURATION ==========
+      strapi.log.info(`[${requestId}] 🌐 DOMAIN & URL CONFIGURATION:`);
+      const serverConfig = strapi.config.get('server');
+      strapi.log.info(`[${requestId}]   Strapi URL Config: ${serverConfig.url || 'NOT SET'}`);
+      strapi.log.info(`[${requestId}]   Strapi Host: ${serverConfig.host}`);
+      strapi.log.info(`[${requestId}]   Strapi Port: ${serverConfig.port}`);
+      strapi.log.info(`[${requestId}]   Proxy Enabled: ${serverConfig.proxy}`);
+      strapi.log.info(`[${requestId}]   Force Proxy Secure: ${serverConfig.forceProxySecure}`);
+      
+      // Check actual request URL
+      const requestURL = `${ctx.protocol}://${ctx.host}${ctx.url}`;
+      strapi.log.info(`[${requestId}]   Request URL: ${requestURL}`);
+      strapi.log.info(`[${requestId}]   Request Protocol: ${ctx.protocol}`);
+      strapi.log.info(`[${requestId}]   Request Host: ${ctx.host}`);
+      strapi.log.info(`[${requestId}]   Request Path: ${ctx.path}`);
+      
+      // Check for URL mismatch
+      if (serverConfig.url && ctx.host && !ctx.host.includes(new URL(serverConfig.url).hostname)) {
+        strapi.log.warn(`[${requestId}] ⚠️  URL MISMATCH: Config URL host doesn't match request host!`);
+        strapi.log.warn(`[${requestId}]   Config URL: ${serverConfig.url}`);
+        strapi.log.warn(`[${requestId}]   Request Host: ${ctx.host}`);
+      }
+      
+      // ========== COMPREHENSIVE HEADER ANALYSIS ==========
+      strapi.log.info(`[${requestId}] 📋 REQUEST HEADERS (Complete):`);
+      
+      // Critical headers
+      const criticalHeaders = [
+        'host', 'origin', 'referer', 'user-agent', 'content-type',
+        'authorization', 'cookie', 'x-forwarded-for', 'x-real-ip',
+        'x-forwarded-proto', 'x-forwarded-host', 'x-forwarded-port',
+        'cf-ray', 'cf-connecting-ip', 'cf-visitor', 'cf-ipcountry',
+        'x-requested-with', 'accept', 'accept-language'
+      ];
+      
+      criticalHeaders.forEach(headerKey => {
+        const value = ctx.headers[headerKey] || ctx.headers[headerKey.toLowerCase()];
+        if (value) {
+          if (headerKey === 'authorization' && value && value.length > 20) {
+            strapi.log.info(`[${requestId}]   ${headerKey}: Bearer ${value.substring(0, 20)}...`);
+          } else if (headerKey === 'cookie' && value) {
+            const cookies = value.split(';').map(c => c.trim());
+            strapi.log.info(`[${requestId}]   ${headerKey}: ${cookies.length} cookie(s) present`);
+            cookies.forEach(cookie => {
+              const [name] = cookie.split('=');
+              strapi.log.info(`[${requestId}]     - ${name || 'unnamed'}`);
+            });
+          } else {
+            strapi.log.info(`[${requestId}]   ${headerKey}: ${value}`);
+          }
         } else {
-          strapi.log.info(`[${requestId}]   ${key}: ${value}`);
+          strapi.log.debug(`[${requestId}]   ${headerKey}: (not present)`);
         }
       });
       
-      // Log request body (email only, mask password)
+      // Log all other headers
+      strapi.log.info(`[${requestId}]   All Headers:`);
+      Object.keys(ctx.headers).forEach(key => {
+        const value = ctx.headers[key];
+        if (!criticalHeaders.includes(key.toLowerCase())) {
+          if (key.toLowerCase() === 'authorization' && value && value.length > 20) {
+            strapi.log.info(`[${requestId}]     ${key}: Bearer ${value.substring(0, 20)}...`);
+          } else {
+            strapi.log.info(`[${requestId}]     ${key}: ${value}`);
+          }
+        }
+      });
+      
+      // ========== PROXY HEADER ANALYSIS ==========
+      strapi.log.info(`[${requestId}] 🔄 PROXY HEADER ANALYSIS:`);
+      const forwardedFor = ctx.headers['x-forwarded-for'] || ctx.headers['x-real-ip'] || ctx.headers['cf-connecting-ip'];
+      const forwardedProto = ctx.headers['x-forwarded-proto'] || ctx.headers['cf-visitor'];
+      const forwardedHost = ctx.headers['x-forwarded-host'];
+      
+      strapi.log.info(`[${requestId}]   Original IP: ${forwardedFor || ctx.request.ip || 'unknown'}`);
+      strapi.log.info(`[${requestId}]   Protocol: ${forwardedProto || ctx.protocol}`);
+      strapi.log.info(`[${requestId}]   Forwarded Host: ${forwardedHost || 'none'}`);
+      
+      if (ctx.headers['cf-ray']) {
+        strapi.log.info(`[${requestId}]   Cloudflare Ray: ${ctx.headers['cf-ray']}`);
+        strapi.log.info(`[${requestId}]   Cloudflare Country: ${ctx.headers['cf-ipcountry'] || 'unknown'}`);
+      }
+      
+      // ========== CORS & SECURITY HEADERS ==========
+      strapi.log.info(`[${requestId}] 🔒 CORS & SECURITY:`);
+      const origin = ctx.headers.origin;
+      const corsConfig = strapi.config.get('middleware.cors');
+      strapi.log.info(`[${requestId}]   Request Origin: ${origin || 'none'}`);
+      strapi.log.info(`[${requestId}]   CORS Enabled: ${corsConfig.enabled}`);
+      strapi.log.info(`[${requestId}]   CORS Origins: ${JSON.stringify(corsConfig.origin)}`);
+      strapi.log.info(`[${requestId}]   CORS Credentials: ${corsConfig.credentials}`);
+      
+      if (origin && corsConfig.origin && !corsConfig.origin.includes(origin)) {
+        strapi.log.warn(`[${requestId}] ⚠️  CORS ORIGIN MISMATCH!`);
+        strapi.log.warn(`[${requestId}]   Request Origin: ${origin}`);
+        strapi.log.warn(`[${requestId}]   Allowed Origins: ${JSON.stringify(corsConfig.origin)}`);
+      }
+      
+      // ========== ADMIN CONFIGURATION ==========
+      strapi.log.info(`[${requestId}] ⚙️  ADMIN CONFIGURATION:`);
+      const adminConfig = strapi.config.get('admin');
+      strapi.log.info(`[${requestId}]   Admin JWT Secret Set: ${adminConfig.auth.secret ? 'YES' : 'NO'}`);
+      strapi.log.info(`[${requestId}]   Cookie Secure: ${adminConfig.cookie.secure}`);
+      strapi.log.info(`[${requestId}]   Cookie SameSite: ${adminConfig.cookie.sameSite}`);
+      strapi.log.info(`[${requestId}]   Cookie HttpOnly: ${adminConfig.cookie.httpOnly}`);
+      
+      // ========== SESSION & COOKIE ANALYSIS ==========
+      strapi.log.info(`[${requestId}] 🍪 SESSION & COOKIE ANALYSIS:`);
+      const cookies = ctx.cookies || {};
+      const cookieKeys = Object.keys(cookies);
+      strapi.log.info(`[${requestId}]   Cookies in Request: ${cookieKeys.length}`);
+      cookieKeys.forEach(key => {
+        const value = cookies[key];
+        strapi.log.info(`[${requestId}]     ${key}: ${value ? value.substring(0, 30) + '...' : 'empty'}`);
+      });
+      
+      if (ctx.session) {
+        strapi.log.info(`[${requestId}]   Session exists: YES`);
+        strapi.log.info(`[${requestId}]   Session keys: ${Object.keys(ctx.session).join(', ')}`);
+      } else {
+        strapi.log.info(`[${requestId}]   Session exists: NO`);
+      }
+      
+      // ========== REQUEST BODY ==========
       if (ctx.request.body) {
-        strapi.log.info(`[${requestId}] Request Body:`);
+        strapi.log.info(`[${requestId}] 📦 REQUEST BODY:`);
         strapi.log.info(`[${requestId}]   email: ${ctx.request.body.email || 'MISSING'}`);
         strapi.log.info(`[${requestId}]   password: ${ctx.request.body.password ? '***PROVIDED*** (length: ' + ctx.request.body.password.length + ')' : 'MISSING'}`);
         
-        // Log IP address
-        const clientIP = ctx.request.ip || ctx.request.connection?.remoteAddress || 'unknown';
-        strapi.log.info(`[${requestId}] Client IP: ${clientIP}`);
-        
-        // Log request origin
-        strapi.log.info(`[${requestId}] Origin: ${ctx.headers.origin || 'none'}`);
-        strapi.log.info(`[${requestId}] Referer: ${ctx.headers.referer || 'none'}`);
+        if (!ctx.request.body.email || !ctx.request.body.password) {
+          strapi.log.error(`[${requestId}] ❌ INCOMPLETE REQUEST BODY!`);
+        }
       } else {
         strapi.log.warn(`[${requestId}] ⚠️  Request body is empty or not parsed!`);
+        strapi.log.warn(`[${requestId}]   Content-Type: ${ctx.headers['content-type']}`);
+        strapi.log.warn(`[${requestId}]   Content-Length: ${ctx.headers['content-length']}`);
       }
       
-      // Try to find user before authentication
+      // ========== USER LOOKUP (Before Authentication) ==========
       if (ctx.request.body?.email) {
+        strapi.log.info(`[${requestId}] 👤 USER LOOKUP:`);
         try {
           const user = await strapi.admin.services.user.findOne({ 
             email: ctx.request.body.email 
@@ -61,7 +171,7 @@ module.exports = (config, { strapi }) => {
             strapi.log.info(`[${requestId}]   - Firstname: ${user.firstname || 'N/A'}`);
             strapi.log.info(`[${requestId}]   - Lastname: ${user.lastname || 'N/A'}`);
             strapi.log.info(`[${requestId}]   - Created: ${user.createdAt}`);
-            strapi.log.info(`[${requestId}]   - Password hash exists: ${user.password ? 'YES' : 'NO'}`);
+            strapi.log.info(`[${requestId}]   - Password hash exists: ${user.password ? 'YES (length: ' + user.password.length + ')' : 'NO'}`);
             
             // Check if user is blocked or inactive
             if (user.blocked) {
@@ -89,55 +199,89 @@ module.exports = (config, { strapi }) => {
         }
       }
       
-      // Continue to next middleware/handler
+      // ========== AUTHENTICATION ATTEMPT ==========
+      strapi.log.info(`[${requestId}] 🔑 Processing authentication...`);
+      
+      // Continue to next middleware/handler (this will trigger authentication)
       await next();
       
-      // Log response details
-      strapi.log.info(`[${requestId}] Response Status: ${ctx.status}`);
-      strapi.log.info(`[${requestId}] Response Headers:`);
+      // ========== RESPONSE ANALYSIS ==========
+      strapi.log.info(`[${requestId}] 📤 RESPONSE ANALYSIS:`);
+      strapi.log.info(`[${requestId}]   Status: ${ctx.status}`);
+      strapi.log.info(`[${requestId}]   Status Text: ${ctx.message || 'none'}`);
+      
+      // Response headers
+      strapi.log.info(`[${requestId}]   Response Headers:`);
       Object.keys(ctx.response.headers || {}).forEach(key => {
         if (key.toLowerCase() === 'set-cookie') {
           const cookies = ctx.response.headers[key];
           if (Array.isArray(cookies)) {
-            cookies.forEach(cookie => {
-              strapi.log.info(`[${requestId}]   ${key}: ${cookie.substring(0, 50)}...`);
+            cookies.forEach((cookie, idx) => {
+              strapi.log.info(`[${requestId}]     ${key}[${idx}]: ${cookie.substring(0, 100)}...`);
+              // Parse cookie details
+              const cookieParts = cookie.split(';').map(p => p.trim());
+              cookieParts.forEach(part => {
+                if (part.toLowerCase().includes('secure')) strapi.log.info(`[${requestId}]       - Secure: true`);
+                if (part.toLowerCase().includes('httponly')) strapi.log.info(`[${requestId}]       - HttpOnly: true`);
+                if (part.toLowerCase().includes('samesite')) strapi.log.info(`[${requestId}]       - ${part}`);
+                if (part.toLowerCase().includes('path=')) strapi.log.info(`[${requestId}]       - ${part}`);
+                if (part.toLowerCase().includes('domain=')) strapi.log.info(`[${requestId}]       - ${part}`);
+              });
             });
           } else {
-            strapi.log.info(`[${requestId}]   ${key}: ${cookies.substring(0, 50)}...`);
+            strapi.log.info(`[${requestId}]     ${key}: ${cookies.substring(0, 100)}...`);
           }
         } else {
-          strapi.log.info(`[${requestId}]   ${key}: ${ctx.response.headers[key]}`);
+          strapi.log.info(`[${requestId}]     ${key}: ${ctx.response.headers[key]}`);
         }
       });
       
-      // Log response body (truncated if token present)
+      // Check CORS headers in response
+      if (ctx.response.headers['access-control-allow-origin']) {
+        strapi.log.info(`[${requestId}]   CORS Allow Origin: ${ctx.response.headers['access-control-allow-origin']}`);
+      } else {
+        strapi.log.warn(`[${requestId}] ⚠️  No Access-Control-Allow-Origin header in response!`);
+      }
+      
+      // Response body
       if (ctx.body) {
         try {
           const bodyStr = typeof ctx.body === 'string' ? ctx.body : JSON.stringify(ctx.body);
           if (bodyStr.includes('token')) {
             // Mask token in response
             const masked = bodyStr.replace(/"token":"[^"]+"/g, '"token":"***MASKED***"');
-            strapi.log.info(`[${requestId}] Response Body: ${masked.substring(0, 500)}`);
+            strapi.log.info(`[${requestId}]   Response Body: ${masked.substring(0, 500)}`);
           } else {
-            strapi.log.info(`[${requestId}] Response Body: ${bodyStr.substring(0, 500)}`);
+            strapi.log.info(`[${requestId}]   Response Body: ${bodyStr.substring(0, 500)}`);
           }
         } catch (err) {
           strapi.log.warn(`[${requestId}] Could not log response body: ${err.message}`);
         }
       }
       
-      // Log authentication result
+      // ========== AUTHENTICATION RESULT ==========
       if (ctx.status === 200) {
         strapi.log.info(`[${requestId}] ✅ LOGIN SUCCESS`);
       } else if (ctx.status === 400 || ctx.status === 401) {
         strapi.log.error(`[${requestId}] ❌ LOGIN FAILED - Status: ${ctx.status}`);
         if (ctx.body?.error) {
-          strapi.log.error(`[${requestId}] Error: ${JSON.stringify(ctx.body.error)}`);
+          strapi.log.error(`[${requestId}]   Error Name: ${ctx.body.error.name}`);
+          strapi.log.error(`[${requestId}]   Error Message: ${ctx.body.error.message}`);
+          strapi.log.error(`[${requestId}]   Error Details: ${JSON.stringify(ctx.body.error.details)}`);
+        }
+        
+        // If user was found but login failed, it's likely password mismatch
+        if (ctx.request.body?.email) {
+          strapi.log.warn(`[${requestId}] 💡 POSSIBLE CAUSES:`);
+          strapi.log.warn(`[${requestId}]   1. Password mismatch (password hash doesn't match)`);
+          strapi.log.warn(`[${requestId}]   2. User is blocked or inactive (check above)`);
+          strapi.log.warn(`[${requestId}]   3. APP_KEYS or ADMIN_JWT_SECRET changed`);
+          strapi.log.warn(`[${requestId}]   4. Cookie/session configuration issue`);
         }
       }
       
       strapi.log.info('='.repeat(80));
-      strapi.log.info(`[${requestId}] End of login attempt log`);
+      strapi.log.info(`[${requestId}] 📝 End of login attempt log`);
       strapi.log.info('='.repeat(80));
       
     } else {

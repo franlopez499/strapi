@@ -3,14 +3,63 @@
 ## Changes Made
 
 ### 1. Created `src/middlewares/admin-login-logger.js`
-A comprehensive logging middleware that logs:
-- **Request headers** (including IP, Origin, Referer)
-- **Request body** (email and password presence, masked)
-- **User lookup** (checks if user exists before authentication)
-- **User status** (active, blocked, creation date)
-- **Response status and headers**
-- **Response body** (with tokens masked for security)
-- **Authentication result** (success/failure)
+A **comprehensive logging middleware** that logs:
+
+#### 🌐 Domain & URL Configuration
+- Strapi URL configuration from environment
+- Request URL, protocol, host, path
+- **URL mismatch detection** (compares config URL vs request host)
+- Proxy settings (proxy enabled, forceProxySecure)
+
+#### 📋 Comprehensive Header Analysis
+- **All request headers** with special focus on:
+  - `host`, `origin`, `referer`
+  - `authorization` (masked)
+  - `cookie` (parsed and listed)
+  - `x-forwarded-*` headers (proxy headers)
+  - `cf-*` headers (Cloudflare headers)
+  - `x-requested-with`, `accept`, etc.
+
+#### 🔄 Proxy Header Analysis
+- Original client IP (`x-forwarded-for`, `x-real-ip`, `cf-connecting-ip`)
+- Protocol (`x-forwarded-proto`, `cf-visitor`)
+- Forwarded host
+- Cloudflare-specific headers (`cf-ray`, `cf-ipcountry`)
+
+#### 🔒 CORS & Security Headers
+- Request origin vs configured CORS origins
+- **CORS mismatch detection**
+- CORS configuration (enabled, credentials, allowed origins)
+
+#### ⚙️ Admin Configuration
+- Admin JWT secret presence
+- Cookie configuration (secure, sameSite, httpOnly)
+
+#### 🍪 Session & Cookie Analysis
+- Cookies present in request
+- Session existence and keys
+- Cookie parsing and analysis
+
+#### 👤 User Lookup (Before Authentication)
+- Database user lookup
+- User status (active, blocked)
+- Password hash presence
+- Lists all admin users if lookup fails
+
+#### 📤 Response Analysis
+- Response status and headers
+- **Cookie parsing** from Set-Cookie headers:
+  - Secure flag
+  - HttpOnly flag
+  - SameSite setting
+  - Path and Domain settings
+- CORS headers in response
+- Response body (with tokens masked)
+
+#### 🔑 Authentication Result
+- Success/failure indication
+- Error details breakdown
+- **Possible causes** suggestions on failure
 
 ### 2. Enhanced Logger Configuration
 Updated `config/middlewares.js` to:
