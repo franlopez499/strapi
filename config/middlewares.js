@@ -3,6 +3,8 @@ module.exports = [
     name: 'strapi::logger',
     config: {
       level: 'debug', // default is info
+      exposeInContext: true,
+      requests: true,
     },
   },
   'strapi::errors',
@@ -44,6 +46,10 @@ module.exports = [
   'strapi::session',
   {
     name: 'global::fix-empty-auth-header',
+    config: {},
+  },
+  {
+    name: 'global::admin-login-logger',
     config: {},
   },
   'strapi::favicon',
