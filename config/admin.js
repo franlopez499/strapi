@@ -16,6 +16,7 @@ module.exports = ({ env }) => ({
   },
   cookie: {
     secure: true,
-    sameSite: 'none', // important for Cloudflare & HTTPS
+    sameSite: 'none', // Required for Cloudflare proxy
+    httpOnly: true, // Security best practice
   },
 });
