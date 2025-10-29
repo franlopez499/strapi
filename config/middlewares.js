@@ -45,6 +45,10 @@ module.exports = [
   'strapi::body',
   'strapi::session',
   {
+    name: 'global::fix-protocol',
+    config: {},
+  },
+  {
     name: 'global::fix-empty-auth-header',
     config: {},
   },

@@ -173,12 +173,31 @@ module.exports = (config, { strapi }) => {
       
       // ========== SESSION & COOKIE ANALYSIS ==========
       strapi.log.info(`[${requestId}] 🍪 SESSION & COOKIE ANALYSIS:`);
-      const cookies = ctx.cookies || {};
-      const cookieKeys = Object.keys(cookies);
-      strapi.log.info(`[${requestId}]   Cookies in Request: ${cookieKeys.length}`);
+      
+      // Handle cookies properly (Koa cookies object)
+      let cookieKeys = [];
+      let cookieCount = 0;
+      try {
+        if (ctx.cookies) {
+          // ctx.cookies is a Koa cookies object, not a plain object
+          // Try to get cookie names from headers instead
+          const cookieHeader = ctx.headers.cookie || ctx.headers.Cookie;
+          if (cookieHeader) {
+            const cookies = cookieHeader.split(';').map(c => c.trim());
+            cookieCount = cookies.length;
+            cookieKeys = cookies.map(cookie => {
+              const [name] = cookie.split('=');
+              return name || 'unnamed';
+            });
+          }
+        }
+      } catch (err) {
+        strapi.log.warn(`[${requestId}]   Error reading cookies: ${err.message}`);
+      }
+      
+      strapi.log.info(`[${requestId}]   Cookies in Request: ${cookieCount}`);
       cookieKeys.forEach(key => {
-        const value = cookies[key];
-        strapi.log.info(`[${requestId}]     ${key}: ${value ? value.substring(0, 30) + '...' : 'empty'}`);
+        strapi.log.info(`[${requestId}]     - ${key}`);
       });
       
       if (ctx.session) {
