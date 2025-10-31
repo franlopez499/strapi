@@ -5,7 +5,7 @@ module.exports = ({ env }) => ({
   cookie: {
     httpOnly: true,
     secure: true,
-    sameSite: 'none',
+    sameSite: 'lax',
   },
   apiToken: {
     salt: env('API_TOKEN_SALT'),
