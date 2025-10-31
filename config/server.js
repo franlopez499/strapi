@@ -19,7 +19,7 @@ module.exports = ({ env }) => ({
     },
     url: '/admin',
     cookie: {
-      secure: true,
+      secure: false,
       sameSite: 'none',
       httpOnly: true,
     },
