@@ -11,5 +11,17 @@ module.exports = ({ env }) => ({
   url: env('URL'),
   proxy: {
     koa: true, // Trust proxy headers
+    trustProxy: true
+  },
+  admin: {
+    auth: {
+      secret: env('ADMIN_JWT_SECRET'),
+    },
+    url: '/admin',
+    cookie: {
+      secure: true,
+      sameSite: 'none',
+      httpOnly: true,
+    },
   },
 });
