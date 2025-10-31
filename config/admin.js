@@ -2,6 +2,11 @@ module.exports = ({ env }) => ({
   auth: {
     secret: env('ADMIN_JWT_SECRET'),
   },
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  },
   apiToken: {
     salt: env('API_TOKEN_SALT'),
   },
