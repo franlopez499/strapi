@@ -13,10 +13,5 @@ module.exports = ({ env }) => ({
   flags: {
     nps: env.bool('FLAG_NPS', true),
     promoteEE: env.bool('FLAG_PROMOTE_EE', true),
-  },
-  cookie: {
-    secure: true,
-    sameSite: 'none', // Required for Cloudflare proxy
-    httpOnly: true, // Security best practice
-  },
+  }
 });
