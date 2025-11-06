@@ -38,12 +38,6 @@
       "relation": "manyToMany",
       "target": "api::blog-post.blog-post",
       "inversedBy": "tags"
-    },
-    "case_studies": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::case-study.case-study",
-      "inversedBy": "tags"
     }
   }
 } 
