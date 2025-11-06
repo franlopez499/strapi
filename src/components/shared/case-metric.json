@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_shared_case_metrics",
+  "info": {
+    "displayName": "Case Metric",
+    "description": "Métrica de caso de éxito (label y valor)"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "value": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    }
+  }
+}
+

@@ -1,11 +1,11 @@
 {
   "kind": "collectionType",
-  "collectionName": "tags",
+  "collectionName": "case_services",
   "info": {
-    "singularName": "tag",
-    "pluralName": "tags",
-    "displayName": "Tag",
-    "description": "Etiquetas para categorizar los artículos del blog"
+    "singularName": "case-service",
+    "pluralName": "case-services",
+    "displayName": "Case Service",
+    "description": "Servicios ofrecidos en los casos de éxito"
   },
   "options": {
     "draftAndPublish": false
@@ -16,7 +16,7 @@
       "type": "string",
       "required": true,
       "unique": true,
-      "maxLength": 50
+      "maxLength": 100
     },
     "slug": {
       "type": "uid",
@@ -26,24 +26,29 @@
     "description": {
       "type": "text",
       "required": false,
-      "maxLength": 200
+      "maxLength": 500
+    },
+    "icon": {
+      "type": "string",
+      "required": false,
+      "maxLength": 50
     },
     "color": {
       "type": "string",
       "required": false,
-      "default": "bg-gray-100 text-gray-800"
-    },
-    "blog_posts": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::blog-post.blog-post",
-      "inversedBy": "tags"
+      "default": "bg-green-100 text-green-800"
     },
     "case_studies": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::case-study.case-study",
-      "inversedBy": "tags"
+      "inversedBy": "services"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
     }
   }
-} 
+}
+
