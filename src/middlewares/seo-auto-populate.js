@@ -23,15 +23,9 @@ module.exports = (config, { strapi }) => {
       
       // Auto-poblar SEO si no existe
       if (!attributes.seo || !attributes.seo.metaTitle) {
-        // Obtener título: title, nombre, name (para case-industry y case-service)
-        const title = attributes.title || attributes.nombre || attributes.name || 'Sin título';
-        
-        // Obtener descripción: excerpt, summary, descripcion, description
-        const description = attributes.excerpt || attributes.summary || attributes.descripcion || attributes.description || 'Sin descripción';
-        
         const autoSEO = {
-          metaTitle: title,
-          metaDescription: description,
+          metaTitle: attributes.title || attributes.nombre || 'Sin título',
+          metaDescription: attributes.excerpt || attributes.descripcion || 'Sin descripción',
           keywords: '',
           noIndex: false
         };
@@ -42,26 +36,15 @@ module.exports = (config, { strapi }) => {
         }
 
         // Si hay imagen, usarla como shareImage
-        // Prioridad: coverImage (case-study), image (blog-post), imagenPrincipal (producto), clientLogo (case-study)
-        if (attributes.coverImage && attributes.coverImage.data) {
-          autoSEO.shareImage = {
-            media: attributes.coverImage,
-            alt: title
-          };
-        } else if (attributes.image && attributes.image.data) {
+        if (attributes.image && attributes.image.data) {
           autoSEO.shareImage = {
             media: attributes.image,
-            alt: title
+            alt: attributes.title || attributes.nombre || 'Imagen'
           };
         } else if (attributes.imagenPrincipal && attributes.imagenPrincipal.data) {
           autoSEO.shareImage = {
             media: attributes.imagenPrincipal,
-            alt: title
-          };
-        } else if (attributes.clientLogo && attributes.clientLogo.data) {
-          autoSEO.shareImage = {
-            media: attributes.clientLogo,
-            alt: `${title} - Logo del cliente`
+            alt: attributes.nombre || 'Imagen del producto'
           };
         }
 
