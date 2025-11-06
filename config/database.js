@@ -4,7 +4,15 @@ module.exports = ({ env }) => ({
         connection: {
             connectionString: env('DATABASE_URL')
         },
-        debug: true,
-        pool: { min: 0, max: 7 },
+        debug: false,
+        pool: { 
+            min: 0, 
+            max: 10,
+            acquireTimeoutMillis: 30000,
+            createTimeoutMillis: 30000,
+            idleTimeoutMillis: 30000,
+            reapIntervalMillis: 1000,
+            createRetryIntervalMillis: 200
+        },
     }
 });
