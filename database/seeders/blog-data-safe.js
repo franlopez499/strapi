@@ -566,14 +566,17 @@ module.exports = {
       }
 
       // 11. Buscar imagen para casos de estudio
+      // Nota: La búsqueda de imagen se hace de forma opcional para evitar problemas con el pool de conexiones
+      // Si necesitas asignar la imagen, hazlo manualmente desde el panel de administración después del seed
       let coverImageId = null;
+      
+      // Comentado temporalmente para evitar problemas con el pool de conexiones en Strapi 5
+      // Descomenta y ajusta si necesitas buscar la imagen automáticamente
+      /*
       try {
         const uploadedFiles = await strapi.entityService.findMany('plugin::upload.file', {
           filters: {
-            $or: [
-              { name: { $contains: 'equipoCieza' } },
-              { name: 'equipoCieza.jpg' }
-            ]
+            name: { $contains: 'equipoCieza' }
           },
           limit: 1
         });
@@ -581,12 +584,13 @@ module.exports = {
         if (uploadedFiles && uploadedFiles.length > 0) {
           coverImageId = uploadedFiles[0].id;
           console.log(`✅ Imagen encontrada para casos de estudio: ${uploadedFiles[0].name} (ID: ${coverImageId})`);
-        } else {
-          console.log('⚠️ No se encontró la imagen equipoCieza.jpg. Los casos de estudio se crearán sin imagen.');
         }
       } catch (error) {
-        console.log('⚠️ Error al buscar imagen equipoCieza.jpg:', error.message);
+        console.log(`⚠️ No se pudo buscar la imagen equipoCieza.jpg: ${error.message}`);
       }
+      */
+      
+      console.log('ℹ️ Los casos de estudio se crearán sin imagen. Asigna manualmente equipoCieza.jpg desde el panel de administración.');
 
       // 12. Crear casos de éxito
       const deportesIndustry = industries.find(i => i.slug === 'deportes');
