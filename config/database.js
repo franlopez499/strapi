@@ -38,22 +38,10 @@ module.exports = ({ env }) => {
         idleTimeoutMillis: 30000,
         reapIntervalMillis: 1000,
         createRetryIntervalMillis: 200,
-        // Callbacks para monitorear el pool
-        afterCreate: (conn, done) => {
-          console.log('[DB Pool] Nueva conexión creada. Pool size:', conn.pool ? conn.pool.numUsed() : 'unknown');
-          done(null, conn);
-        },
-        afterDestroy: (conn, err) => {
-          if (err) {
-            console.error('[DB Pool] Error al destruir conexión:', err.message);
-          } else {
-            console.log('[DB Pool] Conexión destruida');
-          }
-        }
+        // Nota: afterCreate y afterDestroy no son soportados por Tarn en esta versión
       },
       acquireConnectionTimeout: 600000, // 10 minutos
       log: knexLogger,
-      // Hook para monitorear adquisición de conexiones
       asyncStackTraces: true,
     },
     settings: {
