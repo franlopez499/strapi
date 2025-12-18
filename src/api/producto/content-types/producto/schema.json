@@ -33,6 +33,12 @@
       "target": "api::categoria-producto.categoria-producto",
       "inversedBy": "productos"
     },
+    "subcategoria": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::subcategoria-producto.subcategoria-producto",
+      "inversedBy": "productos"
+    },
     "imagenPrincipal": {
       "type": "media",
       "multiple": false,
