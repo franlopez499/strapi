@@ -59,6 +59,12 @@
       "target": "api::producto.producto",
       "mappedBy": "categoria"
     },
+    "subcategorias": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::subcategoria-producto.subcategoria-producto",
+      "mappedBy": "categoria"
+    },
     "seo": {
       "type": "component",
       "repeatable": false,
