@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "resenas",
+  "info": {
+    "singularName": "resena",
+    "pluralName": "resenas",
+    "displayName": "Reseña",
+    "description": "Reseñas de clientes sobre productos. Llegan sin publicar y solo aparecen en la web tras aprobarlas manualmente."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "autor": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "email": {
+      "type": "email",
+      "required": false,
+      "private": true
+    },
+    "puntuacion": {
+      "type": "integer",
+      "required": true,
+      "min": 1,
+      "max": 5
+    },
+    "fecha": {
+      "type": "date",
+      "required": false
+    },
+    "titulo": {
+      "type": "string",
+      "required": false,
+      "maxLength": 120
+    },
+    "comentario": {
+      "type": "text",
+      "required": true,
+      "maxLength": 1500
+    },
+    "localidad": {
+      "type": "string",
+      "required": false,
+      "maxLength": 80
+    },
+    "compraVerificada": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "producto": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::producto.producto",
+      "inversedBy": "resenas"
+    }
+  }
+}
